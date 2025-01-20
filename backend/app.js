@@ -1,5 +1,6 @@
 import express from "express";
-import { createUser, login } from "./controller/auth.js";
+import { createUser, enforceAuth, login } from "./controller/auth.js";
+import { generateImage } from "./controller/image.js";
 
 const app = express();
 app.use(express.json()); // Parse JSON bodies
@@ -36,8 +37,14 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.post("/generate-image", (req, res) => {
+app.post("/generate-image", enforceAuth, async (req, res) => {
   const { prompt, options } = req.body; // options: aspect_ratio, format, quality
+
+  const { image, format } = await generateImage(prompt, options);
+
+  res.type(format);
+
+  res.status(200).send(image);
 });
 
 const port = process.env.PORT || 3000;
